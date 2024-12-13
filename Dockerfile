@@ -6,7 +6,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY generate_keys.py .
-CMD ["python3", "generate_keys.py"]
+CMD ["sh", "-c", "python3 generate_keys.py"]
 
 COPY . .
 EXPOSE 8000
