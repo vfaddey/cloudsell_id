@@ -50,6 +50,6 @@ async def reset_password():
 async def reset_password():
     ...
 
-@router.get('/confirm-email')
+@router.get('/confirm-email', include_in_schema=False)
 async def confirm_email(token: str):
     ...
