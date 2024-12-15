@@ -12,3 +12,6 @@ class AuthenticationException(CloudsellIDException):
 
 class UserAlreadyExists(CloudsellIDException):
     ...
+
+class AlreadyConfirmed(CloudsellIDException):
+    ...
