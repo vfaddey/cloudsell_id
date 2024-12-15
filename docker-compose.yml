@@ -4,6 +4,8 @@ services:
   postgres:
     image: postgres:14
     container_name: postgres
+    networks:
+      - cloudsell-network
     env_file:
       - .env
     environment:
@@ -21,6 +23,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4:4.23
     container_name: pgadmin
+    networks:
+      - cloudsell-network
     env_file:
       - .env
     environment:
@@ -39,6 +43,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: backend
+    networks:
+      - cloudsell-network
     env_file:
       - .env
     ports:
