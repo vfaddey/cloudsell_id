@@ -10,6 +10,7 @@ __pycache__/
 # Distribution / packaging
 .DS_Store
 .Python
+.env.templates
 build/
 develop-eggs/
 dist/
