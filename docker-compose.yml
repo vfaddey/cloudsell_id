@@ -50,3 +50,7 @@ services:
 volumes:
   pg_data:
   pgadmin:
+
+networks:
+  cloudsell-network:
+    external: true
