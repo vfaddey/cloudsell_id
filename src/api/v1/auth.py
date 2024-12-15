@@ -1,12 +1,14 @@
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr
 from starlette import status
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.api import deps
-from src.api.deps import get_user_service
+from src.api.deps import get_user_service, get_current_user
 from src.exceptions.base import CloudsellIDException
+from src.exceptions.user import UserNotFound, AlreadyConfirmed, AuthorizationException
 from src.schemas.token import FullToken, RefreshTokenRequest
-from src.schemas.user import UserCreate
+from src.schemas.user import UserCreate, UserOut
 from src.services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -42,14 +44,42 @@ async def refresh_access_token(request: RefreshTokenRequest,
     except CloudsellIDException as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
-@router.get('/forgot-password', include_in_schema=False)
-async def reset_password():
+@router.get('/forgot-password')
+async def reset_password(email: EmailStr,
+                         user_service: UserService = Depends(get_user_service)):
+    try:
+        await user_service.send_password_reset_email(email)
+    except UserNotFound as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except CloudsellIDException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.patch('/reset-password', include_in_schema=False)
+async def reset_password(token: str):
     ...
 
-@router.post('/reset-password', include_in_schema=False)
-async def reset_password():
-    ...
 
-@router.get('/confirm-email', include_in_schema=False)
-async def confirm_email(token: str):
-    ...
+@router.get('/confirm-email')
+async def confirm_email(token: str,
+                        user_service: UserService = Depends(get_user_service)):
+    try:
+        result = await user_service.confirm_email(token)
+        return result
+    except UserNotFound as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except AuthorizationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except CloudsellIDException as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.get('/confirm-email/send')
+async def send_confirmation_email(user: UserOut = Depends(get_current_user),
+                                  user_service: UserService = Depends(get_user_service)):
+    try:
+        result = await user_service.send_confirmation_email(user)
+        return result
+    except AlreadyConfirmed as e:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=str(e))
+    except CloudsellIDException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
