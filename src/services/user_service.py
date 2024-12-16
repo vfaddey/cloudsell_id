@@ -4,6 +4,7 @@ from jose import JWTError
 from pydantic import EmailStr
 
 from src.core.config import settings, email_settings
+from src.core.exceptions import InvalidTokenException
 from src.core.jwt_provider import JWTProvider
 from src.core.security import verify_password, hash_password
 from src.exceptions.token import InvalidToken
@@ -105,6 +106,21 @@ class UserService:
         user = await self.verify_credentials(token)
         new_access_token = self.__create_token(user.id, user.email)
         return new_access_token
+
+    async def reset_password(self, password: str, token: str) -> UserOut:
+        try:
+            payload = self.__get_token_payload(token)
+            if not payload.get('confirmation'):
+                raise AuthenticationException('Incorrect token')
+            user_db = await self.__repository.get_by_email(payload.get('email'))
+            if not user_db:
+                raise UserNotFound(f'No user with such email: {payload.get("email")}')
+            hashed_password = hash_password(password)
+            user_db.password = hashed_password
+            result = await self.__repository.update(user_db.id, user_db)
+            return UserOut.from_orm(result)
+        except (InvalidTokenException, InvalidToken) as e:
+            raise AuthenticationException(str(e))
 
     async def send_confirmation_email(self,
                                       user: UserOut):
