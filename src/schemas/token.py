@@ -10,3 +10,7 @@ class FullToken(Token):
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
+class ResetPasswordRequest(BaseModel):
+    password: str
+    token: str

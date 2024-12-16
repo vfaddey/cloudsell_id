@@ -1,17 +1,22 @@
+import os
+
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 from starlette import status
 from fastapi import APIRouter, Depends, HTTPException
+from starlette.templating import Jinja2Templates
+from fastapi import Request
 
 from src.api import deps
 from src.api.deps import get_user_service, get_current_user
 from src.exceptions.base import CloudsellIDException
-from src.exceptions.user import UserNotFound, AlreadyConfirmed, AuthorizationException
-from src.schemas.token import FullToken, RefreshTokenRequest
+from src.exceptions.user import UserNotFound, AlreadyConfirmed, AuthorizationException, AuthenticationException
+from src.schemas.token import FullToken, RefreshTokenRequest, ResetPasswordRequest
 from src.schemas.user import UserCreate, UserOut
 from src.services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 
 @router.post('/register', response_model=FullToken)
@@ -54,9 +59,18 @@ async def reset_password(email: EmailStr,
     except CloudsellIDException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-@router.patch('/reset-password', include_in_schema=False)
-async def reset_password(token: str):
-    ...
+@router.patch('/reset-password', response_model=UserOut)
+async def reset_password(request: ResetPasswordRequest,
+                         user_service: UserService = Depends(get_user_service)):
+    try:
+        return await user_service.reset_password(request.password, request.token)
+    except AuthenticationException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get('/reset-password/page')
+async def get_reset_password_page(request: Request, token: str):
+    return templates.TemplateResponse("reset-password.html", {"request": request, "token": token})
 
 
 @router.get('/confirm-email')
