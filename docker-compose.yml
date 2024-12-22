@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: backend
+    container_name: cloudsell-auth
     networks:
       - cloudsell-network
     env_file:
