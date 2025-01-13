@@ -32,8 +32,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
       - pgadmin:/var/lib/pgadmin
-    ports:
-       - "8080:80"
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,8 +45,6 @@ services:
       - cloudsell-network
     env_file:
       - .env
-    ports:
-      - "80:8000"
     depends_on:
       postgres:
         condition: service_healthy
