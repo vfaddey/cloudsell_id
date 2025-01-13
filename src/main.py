@@ -3,6 +3,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from src.api.v1.auth import router as auth_router
 from src.api.v1.users import router as users_router
+from src.api.v1.jwt_conf import router as jwt_router
 from src.core.config import settings
 
 app = FastAPI(
@@ -14,6 +15,7 @@ app = FastAPI(
 )
 app.include_router(auth_router)
 app.include_router(users_router)
+app.include_router(jwt_router)
 
 
 app.add_middleware(
