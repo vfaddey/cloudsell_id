@@ -53,6 +53,8 @@ services:
     image: rabbitmq:3.10.7-management
     container_name: rabbitmq
     hostname: rabbitmq
+    networks:
+      - cloudsell-network
     env_file:
       - .env.rabbitmq
     ports:
